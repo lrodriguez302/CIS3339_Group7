@@ -13,10 +13,7 @@ export function useApi(apiCall) {
       data.value = await apiCall(...args);
       return data.value;
     } catch (err) {
-      error.value =
-        err?.message ||
-        err?.response?.data?.message ||
-        "An unexpected error occurred.";
+      error.value = err.message;
 
       throw err;
     } finally {

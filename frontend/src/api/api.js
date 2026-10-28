@@ -10,6 +10,41 @@ const apiClient = axios.create({
   },
 });
 
+// Centralized Axios response interceptor for API error handling
+apiClient.interceptors.response.use(
+  (response) => response,
+
+  (error) => {
+    let message= "An unexpected error ocurred.";
+
+    if (!error.response) {
+      //Server is unreachable or network request failed
+      message = "Unable to reach the server";
+    } else {
+      const responseData = error.response.data;
+
+      if (typeof responseData === "string") {
+        message = responseData;
+
+      } else if (responseData?.message) {
+        message = responseData.message;
+
+      } else if (responseData?.error) {
+        message = responseData.error;
+      }
+
+      //A 401 means the current session is not valid
+      if (error.response.status === 401) {
+        localStorage.removeItem("authToken");
+        removeAuthHeader();
+        if (window.location.pathname !== "/login") {
+          window.location.href = "/login";
+        }
+      }
+    }
+    return Promise.reject(new Error(message));
+  }
+);
 // Login related API calls
 // If user logs in successfully, this login sets a header to "apiClient" called "Authorization" with the value of "Bearer <token>" This security token is used to validate API calls
 function setAuthHeader(token) {
@@ -72,12 +107,9 @@ export async function getOrgName() {
 // Events related API calls
 // API call to get all events for org
 export const getEvents = async () => {
-  try {
-    const response = await apiClient.get("/events/");
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
+  const response = await apiClient.get("/events/");
+  return response.data;
+  
 };
 
 // API call to GET single event by ID
@@ -231,12 +263,10 @@ export const getAttendance = async () => {
 // Clients related API calls
 // API call to GET all clients for org
 export const getClients = async () => {
-  try {
-    const response = await apiClient.get("clients");
-    return response.data;
-  } catch (error) {
-    throw error.response.data;
-  }
+  
+  const response = await apiClient.get("clients");
+  return response.data;
+  
 };
 
 // API call to GET single client by ID
