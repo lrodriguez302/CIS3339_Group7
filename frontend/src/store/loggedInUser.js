@@ -1,7 +1,7 @@
 // This pinia store contains state with respect to whether a user is logged in 
 import { defineStore } from 'pinia'
 import { useToast } from 'vue-toastification'
-import { loginUser, logoutUser } from '../api/api' // import API calls
+import { loginUser, logoutUser, setAuthHeader } from '../api/api' // import API calls
 import jwt_decode from 'jwt-decode'; // import JSON Web Token decoder to decode the token into the user's information
 
 //Notifications
@@ -18,6 +18,55 @@ export const useLoggedInUserStore = defineStore({
     }
   },
   actions: {
+
+    restoreSession() {
+  const token = localStorage.getItem("authToken");
+
+  // No saved token means the user is logged out
+  if (!token) {
+    return;
+  }
+
+  try {
+    const decodedToken = jwt_decode(token);
+
+    // JWT expiration time is stored in seconds
+    const currentTime = Date.now() / 1000;
+
+    if (!decodedToken.exp || decodedToken.exp <= currentTime) {
+      logoutUser();
+
+      this.$patch({
+        name: "",
+        role: "",
+        isLoggedIn: false
+      });
+
+      return;
+    }
+
+    // Restore the Axios Authorization header
+    setAuthHeader(token);
+
+    // Restore Pinia user state
+    this.$patch({
+      isLoggedIn: true,
+      role: decodedToken.role,
+      name: decodedToken.name
+    });
+
+  } catch (error) {
+    // Corrupted/invalid token should result in a clean logout
+    logoutUser();
+
+    this.$patch({
+      name: "",
+      role: "",
+      isLoggedIn: false
+    });
+  }
+},
+
     async login(username, password) {
       try {
         const token = await loginUser(username, password);
