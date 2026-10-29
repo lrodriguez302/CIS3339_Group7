@@ -4,5 +4,4 @@ dist/
 .DS_Store
 
 # Allow the course-required environment files
-!backend/.env
 !frontend/.env
