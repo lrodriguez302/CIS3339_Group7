@@ -13,12 +13,17 @@ const org = process.env.ORG_ID;
 
 // API endpoint to handle login
 router.post('/login', async (req, res) => {
-  const { username, password } = req.body;
+  const { username, password, orgId } = req.body;
 
   try {
-    const user = await users.findOne({ username: username, org: org });
+    const user = await users.findOne({
+      username: username,
+      org: orgId || org
+    });
     if (!user) {
-      return res.status(400).json({ message: 'Invalid username' });
+      return res.status(400).json({
+        message: 'Invalid username or password'
+      });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
@@ -27,12 +32,15 @@ router.post('/login', async (req, res) => {
     }
 
     const payload = {
-      name: user.name,
-      role: user.role
+      name: user.username,
+      role: user.role,
+      orgId: user.org.toString()
     };
 
     // token expires in 30 days. This is not best security practice but still demonstrates how JWT work
-    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '30d' });
+    const token = jwt.sign(payload, process.env.JWT_SECRET, {
+      expiresIn: '30d'
+    });
     res.json({ token });
   } catch (err) {
     res.status(500).send('Server error');

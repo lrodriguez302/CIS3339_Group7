@@ -21,6 +21,7 @@
     "eslint": "^8.47.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-prettier": "^5.0.0",
+    "nodemon": "^3.1.14",
     "prettier": "^3.0.2"
   },
   "eslintConfig": {
@@ -32,6 +33,10 @@
       "commonjs": true,
       "es6": true,
       "node": true
+    },
+    "parserOptions": {
+      "ecmaVersion": 2022,
+      "sourceType": "script"
     },
     "rules": {
       "prettier/prettier": [

@@ -13,11 +13,13 @@ require('dotenv').config(); //require the dotenv
 const app = express();
 
 // add cors header to the server
+
 app.use(
   cors({
-    origin: '*'
+    origin: process.env.CORS_ORIGIN
   })
 );
+
 
 // suppress mongoose warning to prepare for new version
 mongoose.set('strictQuery', false);
