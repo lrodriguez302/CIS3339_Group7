@@ -20,7 +20,6 @@ app.use(
   })
 );
 
-
 // suppress mongoose warning to prepare for new version
 mongoose.set('strictQuery', false);
 
