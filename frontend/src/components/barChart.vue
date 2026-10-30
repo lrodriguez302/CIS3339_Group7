@@ -4,24 +4,35 @@
   </div>
 </template>
 
-<script>
+<!-- Changing from Options API to Composition API using <script setup> -->
+<script setup>
 import { Chart, registerables } from 'chart.js'
 import { Colors } from 'chart.js';
 
 Chart.register(...registerables)
 Chart.register(Colors);
 
-export default {
-  props: {
-    label: {
-      type: Array
-    },
-    chartData: {
-      type: Array
-    }
+// Replaced the Options API (export default) with Composition API  
+const props = defineProps ({
+  label: {
+    type: Array
   },
-  async mounted() {
-    await new Chart(this.$refs.attendanceChart, {
+  chartData:{
+    type: Array
+  }
+}
+)
+
+// Replaced this.$refs.attendanceChart within the code
+const attendanceChart = ref(null)
+
+// Holds the instance value of Chart.js to be updated and destroyed later.
+let chartInstance = null
+
+
+// The old code does not update the chart when new data comes. Replacing await with 'chartInstance' draws the chart and shows results.
+onMounted(() => {
+    chartInstance = new Chart(attendanceChart.value, {
       type: 'bar',
       data: {
         labels: this.label,
@@ -58,7 +69,27 @@ export default {
         maintainAspectRatio: true
       }
     })
+  })
+
+// The Options API never change the chart, so when new data is implemented. 
+// watch() draws the new chart when data is changed.
+watch(
+  () => [props.label, props.chartData],
+  ([newLabels, newData]) => {
+    if (!chartInstance) return
+    chartInstance.data.labels = newLabels
+    chartInstance.data.datasets[0].data = newData
+    chartInstance.update()
   }
-}
+)
+
+// The Options API never destroys the chart
+onBeforeMount(() => {
+  if (chartInstance) {
+    chartInstance.destroy()
+    chartInstance = null
+  }
+})
+
 </script>
 

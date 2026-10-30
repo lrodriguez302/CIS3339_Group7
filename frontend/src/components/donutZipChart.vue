@@ -4,28 +4,39 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, watch, onMounted, onBeforeMount} from 'vue'
 import { Chart, registerables } from 'chart.js'
+
 Chart.register(...registerables)
+
 //define props (label and chartData)
-export default {
-  props: {
+const props = defineProps({
     label: {
       type: Array
     },
     chartData: {
       type: Array
     }
-  },
-  async mounted() { //uses the data to load the chart's values
-    await new Chart(this.$refs.zipChart, {
+})
+
+// ref replaces this.$refs.zipChart
+const zipChart = ref (null)
+
+// Chart instance is non-reactive, just a JavaScript
+let chartInstance = null
+
+
+// Removed await
+onMounted(() => {
+    chartInstance = new Chart(zipChart.value, {
       type: 'doughnut',
       data: {
-        labels: this.label,
+        labels: props.label,
         datasets: [
           {
             borderWidth: 1,
-            data: this.chartData // Update this line
+            data: props.chartData // Updated this line
           }
         ]
       },
@@ -43,6 +54,25 @@ export default {
         maintainAspectRatio: true
       }
     })
-  },
-}
+  })
+
+// watch() allows the chart to update through frequent changes
+watch (
+  () => [props.label, props.chartData],
+  ([newLabels, newData]) => {
+    if (!chartInstance) return
+    chartInstance.data.labels = newLabels
+    chartInstance.data.datasets[0].data = newData
+    chartInstance.update()
+  }
+)
+
+// Destroys the chart instance
+onBeforeMount(() => {
+  if (chartInstance) {
+    chartInstance.destroy()
+    chartInstance = null
+  }
+})
+
 </script>

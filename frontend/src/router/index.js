@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useLoggedInUserStore } from '../store/loggedInUser'
 
 // make all paths and names lowercase for consistency
+// changed eventdetails path --> eventDetails
 const routes = [
   {
     path: '/',
@@ -47,7 +48,7 @@ const routes = [
     path: '/eventdetails/:id',
     name: 'eventdetails',
     meta: { requiresAuth: true },
-    component: () => import('../views/eventdetails.vue')
+    component: () => import('../views/eventDetails.vue')
   },
   {
     path: '/serviceform',

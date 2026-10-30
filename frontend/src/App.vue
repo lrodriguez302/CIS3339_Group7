@@ -5,7 +5,8 @@
     <div id="_container" class="min-h-screen">
       <header class="w-full">
         <section class="text-center">
-          <img class="m-auto" src="@\assets\DanPersona.svg" />
+          <!-- Using forward slashes instead of backward slashes to resolve OS issues -->
+          <img class="m-auto" src="@/assets/DanPersona.svg" alt="Data Platform logo"/>
         </section>
         <!--Navigation bar-->
         <nav class="mt-10">
@@ -89,42 +90,32 @@
   </main>
 </template>
 
-<script>
+<!-- The script runs in a single block, using <script setup> removed the clutter from setup(), data(), created() and methods. -->
+<script setup>
+import { ref } from 'vue'
 import { useLoggedInUserStore } from './store/loggedInUser'
 import { getOrgName } from './api/api'
-import { useToast } from 'vue-toastification'
 
-//Notifications
-const toast = useToast()
 
-export default {
-  setup() {
-    const user = useLoggedInUserStore();
-    return { user };
-  },
-  data() {
-    return {
-      orgName: "Dataplatform",
-    };
-  },
-  async created() {
-    try {
-      this.orgName = await getOrgName();
-    } catch {
-      throw (error)
-    }
-  },
-  methods: {
-    logout() {
-      try {
-        this.$store.dispatch('clearSessionData');
-        this.$router.push('/')
-      } catch (error) {
-        toast.error('logout error', error)
-      }
-    },
+// Top-level variable 
+const user = useLoggedInUserStore()
+
+// {OrgName} is now a reference. It fetches data from the API if the 'Dataplatform' changes.
+const OrgName = ref('Dataplatform')
+
+
+// The old block of code would catch errors with no errors involved. This code is able to log the real error and keep the org name.
+async function loadOrgName() {
+  try {
+    orgName.value = await getOrgName()
+  } catch (error) {
+    console.error('Unable to load organization name:', error)
   }
 }
+
+
+
+
 </script>
 
 <style scoped>
