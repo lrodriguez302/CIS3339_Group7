@@ -191,6 +191,8 @@ const toast = useToast()
 // replaces this.$router
 const router = useRouter()
 
+const v$ = useVuelidate(rules, { client })
+
 // client becomes reactive object.
 //client variable to hold new client information
 const client = reactive ({

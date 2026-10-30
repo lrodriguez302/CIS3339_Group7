@@ -107,7 +107,7 @@ function formatDate(date) {
 const toast = useToast()
 
 // useRouter() replaces the global router
-const router = routerTable()
+const router = useRouter()
 
 
 // each data() becomes ref
@@ -185,7 +185,7 @@ function openEvent(event) {
               eventDate: formattedDate
             };
             const response = await searchEvents(query);
-            this.events = response;
+            events.value = response;
           } catch (error) {
             toast.error('Error searching events:', error)
           }

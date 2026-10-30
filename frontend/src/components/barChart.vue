@@ -6,6 +6,7 @@
 
 <!-- Changing from Options API to Composition API using <script setup> -->
 <script setup>
+import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import { Chart, registerables } from 'chart.js'
 import { Colors } from 'chart.js';
 
@@ -84,7 +85,7 @@ watch(
 )
 
 // The Options API never destroys the chart
-onBeforeMount(() => {
+onBeforeUnmount(() => {
   if (chartInstance) {
     chartInstance.destroy()
     chartInstance = null

@@ -126,6 +126,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import AttendanceChart from '../components/barChart.vue'
 import ZipChart from '../components/donutZipChart.vue'
 import { getAttendance, getClientsByZipCode } from '../api/api'
@@ -138,6 +139,9 @@ function formatDate(date) {
   const day = String(isoDate.getUTCDate()).padStart(2, '0')
   return `${month}/${day}/${year}`
 }
+
+const router = useRouter()
+
 
 // data property becomes ref
 const recentEvents = ref([])

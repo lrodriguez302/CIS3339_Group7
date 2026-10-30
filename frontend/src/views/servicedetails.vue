@@ -76,7 +76,7 @@
           </div>
           <!--Go back button-->
           <div class="flex justify-between mt-20 mr-20">
-            <button type="reset" class="border border-red-700 bg-white text-red-700 rounded" @click="this.$router.back()">
+            <button type="reset" class="border border-red-700 bg-white text-red-700 rounded" @click="router.back()">
               Go back
             </button>
           </div>
@@ -169,6 +169,8 @@ const rules =  {
         name: { required },
       },
     }
+
+const v$ = useVuelidate(rules, { service })
 
 // async mounted() -> onMounted(async ())
 onMounted(async () => {

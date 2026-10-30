@@ -5,7 +5,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onBeforeMount} from 'vue'
+import { ref, watch, onMounted, onBeforeUnmount} from 'vue'
 import { Chart, registerables } from 'chart.js'
 
 Chart.register(...registerables)
@@ -68,7 +68,7 @@ watch (
 )
 
 // Destroys the chart instance
-onBeforeMount(() => {
+onBeforeUnmount(() => {
   if (chartInstance) {
     chartInstance.destroy()
     chartInstance = null

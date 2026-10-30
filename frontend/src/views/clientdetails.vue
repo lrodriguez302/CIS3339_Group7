@@ -171,7 +171,7 @@
         </div>
         <!--Go back button-->
         <div class="flex justify-between mt-10 mr-20">
-          <button type="reset" class="border border-red-700 bg-white text-red-700 rounded" @click=this.$router.back()>
+          <button type="reset" class="border border-red-700 bg-white text-red-700 rounded" @click="router.back()"">
             Go back
           </button>
         </div>
@@ -241,6 +241,7 @@ import VueMultiselect from 'vue-multiselect'
 import { useLoggedInUserStore } from "../store/loggedInUser";
 import { getClientById, getClientEvents, getNonClientEvents, registerAttendee, deregisterAttendee, updateClient, deleteClientbyId } from '../api/api'
 import { useToast } from 'vue-toastification'
+
 // formatDate is in this file
 // Formats an ISO date (e.g. "2026-03-15T00:00:00.000Z") as MM/DD/YYYY
 function formatDate(date) {
@@ -257,7 +258,7 @@ const toast = useToast()
 
 // useRoute()/useRouter() to replace this.$route and $router
 const route = useRoute()
-const router = userRouter()
+const router = useRouter()
 
 
 // user is logged in store
@@ -394,7 +395,7 @@ function nameWithDate({ name, date }) {
 
       try {
         const response = await updateClient(route.params.id, client.value);
-        this.$router.push('/findclient')
+        router.push('/findclient')
         toast.success(response)
       } catch (error) {
         toast.error(error)
