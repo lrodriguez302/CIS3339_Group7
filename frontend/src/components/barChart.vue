@@ -36,11 +36,11 @@ onMounted(() => {
     chartInstance = new Chart(attendanceChart.value, {
       type: 'bar',
       data: {
-        labels: this.label,
+        labels: label.value,
         datasets: [
           {
             borderWidth: 1,
-            data: this.chartData
+            data: chartData.value
           }
         ]
       },

@@ -208,7 +208,7 @@ async function getZipData() {
 
 // Options API never defined editEvent(), therefore clicking a row results into an error.
 function editEvent(eventId) {
-  router.push({ name: 'eventDetails', params: { id: eventId } } ) 
+  router.push({ name: 'eventdetails', params: { id: eventId } } ) 
   }
 
 // mounted() -> onMounted()

@@ -249,7 +249,7 @@ const validDate = (value) => {
     }
 
 // validations() -> rule object 
-const rule = {
+const rules = {
       event: {
         name: { required },
         date: {

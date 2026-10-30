@@ -222,7 +222,7 @@ const rules = {
     }
 
   // rules are passed to Vuelidate
-  const v$ = useVuelidate(rules, {events})
+  const v$ = useVuelidate(rules, { event })
 
   // async mounted --> onMounted(async)
   // when component is mounted, data is loaded
@@ -252,7 +252,7 @@ const rules = {
 // this.event -> event
       try {
         const response = await createEvent(event);
-        this.$router.push('/findevents')
+        router.push('/findevents')
         toast.success(response)
       } catch (error) {
         toast.error('error creating new event:', error)

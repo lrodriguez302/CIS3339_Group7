@@ -59,25 +59,7 @@
         <h3 class="italic">Click table row to view event details</h3>
       </div>
       <div class="flex flex-col col-span-2">
-        <table class="min-w-full shadow-md rounded">
-          <thead class="bg-gray-50 text-xl">
-            <tr>
-              <th class="p-4 text-left">Event Name</th>
-              <th class="p-4 text-left">Event Date</th>
-              <th class="p-4 text-left">Event Address</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-300">
-            <tr @click="$router.push({name: 'eventdetails', params: { id: event._id } })"
-              v-for="event in events" :key="event._id" class="cursor-pointer"
-              :class="{ 'hoverRow': hoverId === event._id }" @mouseenter="hoverId = event._id"
-              @mouseleave="hoverId = null">
-              <td class="p-2 text-left">{{ event.name }}</td>
-              <td class="p-2 text-left">{{ formatDate(event.date) }}</td>
-              <td class="p-2 text-left">{{ event.address.line1 }}</td>
-            </tr>
-          </tbody>
-        </table>
+         <DataTable :columns="columns" :rows="events" @row-click="openEvent" />
       </div>
     </div>
   </main>
@@ -145,8 +127,6 @@ function openEvent(event) {
       name.value = null
       eventDate.value = null
 
-      // show loading wheel
-      isLoading.value = true;
       // get list of events
       try {
         const response = await getEvents(); 

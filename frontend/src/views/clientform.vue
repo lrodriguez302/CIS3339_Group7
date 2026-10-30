@@ -191,7 +191,6 @@ const toast = useToast()
 // replaces this.$router
 const router = useRouter()
 
-const v$ = useVuelidate(rules, { client })
 
 // client becomes reactive object.
 //client variable to hold new client information
@@ -232,7 +231,10 @@ const rules = {
         }
       }
     }
-  
+
+
+const v$ = useVuelidate(rules, { client })
+
 // plain function this.v$ --> v$.value
 // method called when user submits the form
 async function submitForm() {
