@@ -101,7 +101,7 @@ import { getOrgName } from './api/api'
 const user = useLoggedInUserStore()
 
 // {OrgName} is now a reference. It fetches data from the API if the 'Dataplatform' changes.
-const OrgName = ref('Dataplatform')
+const orgName = ref('Dataplatform')
 
 
 // The old block of code would catch errors with no errors involved. This code is able to log the real error and keep the org name.
@@ -113,6 +113,7 @@ async function loadOrgName() {
   }
 }
 
+loadOrgName()
 
 
 
