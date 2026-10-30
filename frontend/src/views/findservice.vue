@@ -61,101 +61,100 @@
         <h3 class="italic">Click table row to view service details</h3>
       </div>
       <div class="flex flex-col col-span-2">
-        <table class="min-w-full shadow-md rounded">
-          <thead class="bg-gray-50 text-xl">
-            <tr>
-              <th class="p-4 text-left" style="width: 25%;">Service Name</th>
-              <th class="p-4 text-left" style="width: 75%;">Service Description</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-300">
-            <tr @click="$router.push({name: 'servicedetails', params: { id: service._id } })" 
-            v-for="service in services" :key="service._id" class="cursor-pointer"
-              :class="{ 'hoverRow': hoverId === service._id }" @mouseenter="hoverId = service._id"
-              @mouseleave="hoverId = null">
-              <td class="p-4 text-left">{{ service.name }}</td>
-              <td class="p-4 text-left text-sm">{{ service.description }}</td>
-            </tr>
-          </tbody>
-        </table>
+          <DataTable :columns="columns" :rows="services" @row-click="openService" />
       </div>
     </div>
   </main>
 </template>
 
-<script>
+// Options to Composition API using script setup
+<script setup>
+import { ref, onMounted} from 'vue'
+import { useRouter } from 'vue-router'
 import { getServices, searchServices } from '../api/api'
 import { useToast } from 'vue-toastification'
+import DataTable from '../components/DataTable.vue'
 
 //Notifications
 const toast = useToast()
 
-export default {
-  data() {
-    return {
-      //variable to hold the services for the organization
-      services: null,
-      // Parameters for search to occur
-      searchBy: null,
-      name: null,
-      description: null,
-      // variable stores the ID of the row that the mouse is currently hovering over (to highlight the row red)
-      hoverId: null,
-    }
-  },
-  mounted() {
-    // when component is mounted, load the data
-    this.loadData();
-  },
-  methods: {
+// useRouter() replaces global $router
+const router = useRouter()
+
+//each data() becomes ref
+//variable to hold the services for the organization
+const services = ref(null)
+// Parameters for search to occur
+const searchBy = ref(null)
+const name =  ref(null)
+const description = ref(null)
+
+// Defining service columns for the DataTable
+const columns = [
+  { label: 'Service Name', field: 'name', width: '25%' },
+  { label: 'Service Description', field: 'description', width: '75%', cellClass: 'text-sm' }
+]
+
+// Opens the detailed page for clicked service
+function openService(service) {
+  router.push( {name: 'servicedetails', params: { id: service._id} } )
+}
+
+
+    // async function is a plain async function
     // method called when component is mounted
-    async loadData() {
+    async function loadData() {
       // Resets all the variables
-      this.searchBy = ''
-      this.name = ''
-      this.description = ''
+      searchBy.value = ''
+      name.value = ''
+      description.value = ''
 
       // get list of services
       try {
         const response = await getServices();
-        this.services = response;
+        services.value = response;
       } catch (error) {
         toast.error(error)
       }
-    },
+    }
 
+    // async function is a plain async function
     // method called when user searches for a service
-    async handleSubmitForm() {
+    async function handleSubmitForm() {
       // if user searches by service name
-      if (this.searchBy === 'Service Name') {
-        if (this.name) {
+      if (searchBy.value === 'Service Name') {
+        if (name.value) {
           try {
             const query = {
               searchBy: 'name',
-              name: this.name
+              name: name.value
             }
             const response = await searchServices(query)
-            this.services = response;
+            services.value = response;
           } catch (error) {
             toast.error(error)
           }
         }
         // if user searches by service description
-      } else if (this.searchBy === 'Service Description') {
-        if (this.description) {
+      } else if (searchBy.value === 'Service Description') {
+        if (description.value) {
           try {
             const query = {
               searchBy: 'description',
-              description: this.description
+              description: description.value
             }
             const response = await searchServices(query)
-            this.services = response;
+            services.value = response;
           } catch (error) {
             toast.error('Error searching services:', error)
           }
         }
       }
-    },
-  },
-}
+    }
+ 
+    
+// when component is mounted, load the data
+onMounted(() => {
+  loadData()
+})
 </script>

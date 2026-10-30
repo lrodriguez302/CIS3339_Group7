@@ -31,22 +31,17 @@
     </div>
 </template>
 
-<script>
+<!--<script setup>-->
+<script setup>
+  import { ref } from 'vue'
   import { useLoggedInUserStore } from "../store/loggedInUser";
 
-  export default {
-    data() {
-      return {
-        username: "",
-        password: "",
-      }
-    },
-    setup() {
-      const store = useLoggedInUserStore();
-      return {
-        store
-      }
-    }
-  }
+// Pinia store the login
+  const store = useLoggedInUserStore();
+
+// username and password becomes ref
+  const username = ref('')
+  const password = ref('')
+
 </script>
 

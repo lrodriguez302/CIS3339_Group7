@@ -59,116 +59,123 @@
         <h3 class="italic">Click table row to view event details</h3>
       </div>
       <div class="flex flex-col col-span-2">
-        <table class="min-w-full shadow-md rounded">
-          <thead class="bg-gray-50 text-xl">
-            <tr>
-              <th class="p-4 text-left">Event Name</th>
-              <th class="p-4 text-left">Event Date</th>
-              <th class="p-4 text-left">Event Address</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-300">
-            <tr @click="$router.push({name: 'eventdetails', params: { id: event._id } })"
-              v-for="event in events" :key="event._id" class="cursor-pointer"
-              :class="{ 'hoverRow': hoverId === event._id }" @mouseenter="hoverId = event._id"
-              @mouseleave="hoverId = null">
-              <td class="p-2 text-left">{{ event.name }}</td>
-              <td class="p-2 text-left">{{ formatDate(event.date) }}</td>
-              <td class="p-2 text-left">{{ event.address.line1 }}</td>
-            </tr>
-          </tbody>
-        </table>
+         <DataTable :columns="columns" :rows="events" @row-click="openEvent" />
       </div>
     </div>
   </main>
 </template>
 
-<script>
+
+<!--Options API to Composition API using script -->
+<script setup>
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { getEvents, searchEvents } from '../api/api'
 import { useToast } from 'vue-toastification'
+import DataTable from '../components/DataTable.vue'
 
+
+// Formats an ISO date (e.g. "2026-03-15T00:00:00.000Z") as MM/DD/YYYY
+function formatDate(date) {
+  const isoDate = new Date(date)
+  const year = isoDate.getUTCFullYear()
+  const month = String(isoDate.getUTCMonth() + 1).padStart(2, '0')
+  const day = String(isoDate.getUTCDate()).padStart(2, '0')
+  return `${month}/${day}/${year}`
+}
+
+ 
 //Notifications
 const toast = useToast()
 
-export default {
-  data() {
-    return {
-      //variable to hold all events for the organization
-      events: null,
-      // Parameters for search to occur
-      searchBy: null,
-      name: null,
-      eventDate: null,
-      // variable stores the ID of the row that the mouse is currently hovering over (to highlight the row red)
-      hoverId: null,
-    }
-  },
-  mounted() {
-    // when component is mounted, load the data
-    this.loadData();
-  },
-  methods: {
-    // method called when component is mounted
-    async loadData() {
-      // Resets variables used for search
-      this.searchBy = null
-      this.name = null
-      this.eventDate = null
+// useRouter() replaces the global router
+const router = useRouter()
 
-      // show loading wheel
-      this.isLoading = true;
+
+// each data() becomes ref
+
+//variable to hold all events for the organization
+const events = ref(null)
+// Parameters for search to occur
+const searchBy = ref(null)
+const name = ref(null)
+const eventDate = ref(null)
+
+// Deletion of hoverId, will be used in DataTable.vue
+
+
+// F3: Creating columns for the DataTable
+const columns = [
+  { label: 'Event Name', field: 'name' },
+  { label: 'Event Date', field: 'date', render: (event) => formatDate(event.date) },
+  { label: 'Event Address', field: 'address.line1' }
+]
+
+// Opens the detailed page for clicked events
+function openEvent(event) {
+  router.push ({ name: 'eventdetails', params: {id: event._id} })
+}
+
+
+
+
+    // method turns in a plain async function
+    // method called when component is mounted
+    async function loadData() {
+      // Resets variables used for search
+      searchBy.value = null
+      name.value = null
+      eventDate.value = null
+
       // get list of events
       try {
-        const response = await getEvents();
-        this.events = response;
+        const response = await getEvents(); 
+        events.value = response;
       } catch (error) {
         toast.error('loadData error', error)
       }
-    },
+    }
 
+
+    // method turns in a plain async function
     // method called when user searches for an event
-    async handleSubmitForm() {
+    async function handleSubmitForm() {
       // if user searches by event name
-      if (this.searchBy === 'Event Name') {
-        if (this.name) {
+      if (searchBy.value === 'Event Name') {
+        if (name.value) {
           try {
             const query = {
               searchBy: 'name',
-              name: this.name
+              name: name.value
             };
             const response = await searchEvents(query);
-            this.events = response;
+            events.value = response;
           } catch (error) {
             toast.error('Error searching events', error)
           }
         }
         // if user searches by event date
-      } else if (this.searchBy === 'Event Date') {
-        if (this.eventDate) {
+      } else if (searchBy.value === 'Event Date') {
+        if (eventDate.value) {
           try {
-            const eventDate = new Date(this.eventDate);
+            const selectedDate = new Date(eventDate.value);
             const formattedDate = eventDate.toISOString().substring(0, 10);
             const query = {
               searchBy: 'date',
               eventDate: formattedDate
             };
             const response = await searchEvents(query);
-            this.events = response;
+            events.value = response;
           } catch (error) {
             toast.error('Error searching events:', error)
           }
         }
       }
-    },
+    }
 
-    // method called for each event date so it will be formatted correctly on the table
-    formatDate(date) {
-      const isoDate = new Date(date);
-      const year = isoDate.getUTCFullYear();
-      const month = String(isoDate.getUTCMonth() + 1).padStart(2, '0');
-      const day = String(isoDate.getUTCDate()).padStart(2, '0');
-      return `${month}/${day}/${year}`;
-    },
-  },
-}
+// when component is mounted, load data
+onMounted(() => {
+  loadData()
+})
+
 </script>

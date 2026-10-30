@@ -175,7 +175,10 @@
   </main>
 </template>
 
-<script>
+// Options API -> Composition API using script setup
+<script setup>
+import { reactive } from 'vue'
+import { useRouter } from 'vue-router'
 //import functionalities for validation
 import useVuelidate from '@vuelidate/core'
 import { required, email, numeric, minLength, maxLength } from '@vuelidate/validators'
@@ -185,11 +188,13 @@ import { useToast } from 'vue-toastification'
 //Notifications
 const toast = useToast()
 
-export default {
-  data() {
-    return {
-      //client variable to hold new client information
-      client: {
+// replaces this.$router
+const router = useRouter()
+
+
+// client becomes reactive object.
+//client variable to hold new client information
+const client = reactive ({
         firstName: null,
         middleName: null,
         lastName: null,
@@ -204,18 +209,11 @@ export default {
           city: null,
           county: null,
           zip: null
-        },
-      }
-    }
-  },
-  setup() {
-    // Register Vuelidate
-    const v$ = useVuelidate();
-    return { v$ };
-  },
-  validations() {
-    // validations for client
-    return {
+        }
+      })
+    
+  // validation() becomes a plain rule object.
+const rules = {
       client: {
         firstName: { required },
         lastName: { required },
@@ -225,35 +223,36 @@ export default {
             required,
             numeric,
             minLength: minLength(10),
-            maxLength: maxLength(10),
-          },
+            maxLength: maxLength(10)
+          }
         },
         address: {
-          city: { required },
-        },
-      },
-    };
-  },
-  methods: {
-    // method called when user submits the form
-    async submitForm() {
-      // Trigger validation
-      this.v$.$validate();
-
-      if (this.v$.$error) {
-        // Form is invalid, do not proceed
-        return;
+          city: { required }
+        }
       }
+    }
 
+
+const v$ = useVuelidate(rules, { client })
+
+// plain function this.v$ --> v$.value
+// method called when user submits the form
+async function submitForm() {
+      // Trigger validation
+      await v$.value.$validate()
+
+      if (v$.value.$error) {
+        // Form is invalid, do not proceed
+        return
+      }
+// this.$router -> router
       try {
-        const response = await createClient(this.client);
-        this.$router.push('/findclient')
+        const response = await createClient(client);
+        router.push('/findclient')
         toast.success(response)
       } catch (error) {
         toast.error(error)
       }
-    },
-  }
 }
 </script>
 
