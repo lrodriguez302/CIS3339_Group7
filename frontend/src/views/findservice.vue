@@ -97,7 +97,7 @@ const columns = [
 
 // Opens the detailed page for clicked service
 function openService(service) {
-  router.push( {name: 'servicedetails', param: { id: service._id} } )
+  router.push( {name: 'servicedetails', params: { id: service._id} } )
 }
 
 
