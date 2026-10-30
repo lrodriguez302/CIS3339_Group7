@@ -154,7 +154,11 @@
   </main>
 </template>
 
-<script>
+
+// Options API -> Composition API using script setup
+<script setup>
+import { ref, reactive, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 // import vuelidate validations
 import useVuelidate from '@vuelidate/core'
 import { required } from '@vuelidate/validators'
@@ -164,11 +168,12 @@ import { useToast } from 'vue-toastification'
 //Notifications
 const toast = useToast()
 
-export default {
-  data() {
-    return {
-      // event variable to hold new event information
-      event: {
+// useRouter() replaces this.$router
+const router = useRouter()
+
+  // event is reactive
+  // event variable to hold new event information
+const event = reactive ({
         name: null,
         description: null,
         date: null,
@@ -181,20 +186,18 @@ export default {
           zip: null
         },
         attendees: [],
-      },
-      //variable to assign service IDs to event (user clicks checkboxes to add services to event)
-      activeServices: [],
-      // variable that determines which services in the List of Services checkboxes have expanded details
-      openDescriptions: [],
-    }
-  },
-  setup() {
-    // Register Vuelidate
-    const v$ = useVuelidate();
-    return { v$ };
-  },
-  validations() {
-    // validations
+      })
+
+// activeServices is ref
+//variable to assign service IDs to event (user clicks checkboxes to add services to event)
+const activeServices = ref([])
+
+// openDescriptions is ref
+// variable that determines which services in the List of Services checkboxes have expanded details
+const openDescriptions= ref([])
+
+  
+// value must change to real date
     const validDate = (value) => {
       const date = new Date(value)
       return !isNaN(date)
@@ -206,46 +209,54 @@ export default {
       return value >= today.toISOString().split('T')[0]
     }
 
-    return {
+// validation() becomes a plain rule object
+const rules = {
       event: {
         name: { required },
         date: {
           required,
           validDate,
           notBeforeToday
-        },
+        }
       }
     }
-  },
-  async mounted() {
-    // when component is mounted, data is loaded
+
+  // rules are passed to Vuelidate
+  const v$ = useVuelidate(rules, {events})
+
+  // async mounted --> onMounted(async)
+  // when component is mounted, data is loaded
+  onMounted(async () => {
     try {
         const response = await getServices();
-        this.activeServices = response.filter(item => item.status === "Active")
+        activeServices.value = response.filter(item => item.status === "Active")
       } catch (error) {
         toast.error(error)
       }
-  },
-  methods: {
-    // method called when user tries to create new event
-    async handleSubmitForm() {
-      // Trigger validation
-      this.v$.$validate();
+  })
 
-      if (this.v$.$error) {
+    // method turns into a plain function --> async function
+    //this.v$ --> v$.value
+    // method called when user tries to create new event
+    async function handleSubmitForm() {
+      // Trigger validation
+      v$.value.$validate();
+
+      if (v$.value.$error) {
         toast.error('Please fix input field errors')
         // Form is invalid, do not proceed
         return;
       }
 
+
+// this.event -> event
       try {
-        const response = await createEvent(this.event);
+        const response = await createEvent(event);
         this.$router.push('/findevents')
         toast.success(response)
       } catch (error) {
         toast.error('error creating new event:', error)
       }
-    },
-  },
-}
+    }
+  
 </script>
