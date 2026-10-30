@@ -124,109 +124,93 @@
   </main>
 </template>
 
-<script>
+<script setup>
+import { ref, onMounted } from 'vue'
 import AttendanceChart from '../components/barChart.vue'
 import ZipChart from '../components/donutZipChart.vue'
 import { getAttendance, getClientsByZipCode } from '../api/api'
 
-export default {
-  components: {
-    AttendanceChart,
-    ZipChart,
-  },
-  data() {
-    return {
-      recentEvents: [],
-      zips: [],
-      labels: [],
-      chartData: [],
-      zipLabels: [],
-      zipChartData: [],
-      loading: false,
-      error: null,
-      zipLoading: false,
-      zipError: null
-    }
-  },
-  mounted() {
-    this.getAttendanceData()
-    this.getZipData()
-  },
-  methods: {
-    async getAttendanceData() {
+// Formats an ISO date (e.g. "2026-03-15T00:00:00.000Z") as MM/DD/YYYY
+function formatDate(date) {
+  const isoDate = new Date(date)
+  const year = isoDate.getUTCFullYear()
+  const month = String(isoDate.getUTCMonth() + 1).padStart(2, '0')
+  const day = String(isoDate.getUTCDate()).padStart(2, '0')
+  return `${month}/${day}/${year}`
+}
+
+// data property becomes ref
+const recentEvents = ref([])
+const zips = ref([])
+const labels = ref([])
+const chartData = ref([])
+const zipLabels = ref([])
+const zipChartData = ref([])
+const loading = ref(false)
+const error = ref(null)
+const zipLoading = ref(false)
+const zipError = ref(null)
+
+
+function toErrorInfo(err) {
+  if (err.response) {
+    // client receives an error response (5xx, 4xx)
+    return {title: 'Server Response', message: err.message }
+  } else if (err.request) {
+    // client never received a response, or request never left
+    return { title: 'Unable to reach server', message: err.message }
+  }
+  // Error within code
+  return { title: 'App Error', message: err.message }
+}
+
+
+
+// method is now a plain async function
+async function getAttendanceData() {
       try {
-        this.error = null
-        this.loading = true
+        error.value = null
+        loading.value = true
         
         const attendance = await getAttendance();
-        this.recentEvents = attendance;
-        this.labels = attendance.map(
-          (item) => `${item.name} (${this.formatDate(item.date)})`
+        recentEvents.value = attendance;
+        labels.value = attendance.map(
+          (item) => `${item.name} (${formatDate(item.date)})`
         )
-        this.chartData = attendance.map((item) => item.attendees.length)
+        chartData.value = attendance.map((item) => item.attendees.length)
       } catch (err) {
-        if (err.response) {
-          // client received an error response (5xx, 4xx)
-          this.error = {
-            title: 'Server Response',
-            message: err.message
-          }
-        } else if (err.request) {
-          // client never received a response, or request never left
-          this.error = {
-            title: 'Unable to Reach Server',
-            message: err.message
-          }
-        } else {
-          // There's probably an error in your code
-          this.error = {
-            title: 'Application Error',
-            message: err.message
-          }
-        }
+        error.value = toErrorInfo(err)
+    
       }
-      this.loading = false
-    },
-    async getZipData() {
+      loading.value = false
+  }
+
+
+// methods.getZipData --> plain async function
+async function getZipData() {
       try {
-        this.zipError = null
-        this.zipLoading = true
+        zipError.value = null
+        zipLoading.value = true
         
         const zipdata = await getClientsByZipCode();
-        this.zips = zipdata;
-        this.zipLabels = zipdata.map((item) => item._id)
-        this.zipChartData = zipdata.map((item) => item.count)
+        zips.value = zipdata;
+        zipLabels.value = zipdata.map((item) => item._id)
+        zipChartData.value = zipdata.map((item) => item.count)
       } catch (err) {
-        if (err.response) {
-          // client received an error response (5xx, 4xx)
-          this.zipError = {
-            title: 'Server Response',
-            message: err.message
-          }
-        } else if (err.request) {
-          // client never received a response, or request never left
-          this.zipError = {
-            title: 'Unable to Reach Server',
-            message: err.message
-          }
-        } else {
-          // There's probably an error in your code
-          this.zipError = {
-            title: 'Application Error',
-            message: err.message
-          }
-        }
+        zipError.value = toErrorInfo(err)
       }
-      this.zipLoading = false
-    },
-    // method called to format the event date
-    formatDate(date) {
-      const isoDate = new Date(date);
-      const year = isoDate.getUTCFullYear();
-      const month = String(isoDate.getUTCMonth() + 1).padStart(2, '0');
-      const day = String(isoDate.getUTCDate()).padStart(2, '0');
-      return `${month}/${day}/${year}`;
-    },
+      zipLoading.value = false
+    }
+
+// Options API never defined editEvent(), therefore clicking a row results into an error.
+function editEvent(eventId) {
+  router.push({ name: 'eventDetails', params: { id: eventId } } ) 
   }
-}
+
+// mounted() -> onMounted()
+onMounted (() => {
+  getAttendanceData()
+  getZipData()
+})
+
 </script>
