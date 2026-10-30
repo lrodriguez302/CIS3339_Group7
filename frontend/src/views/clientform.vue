@@ -241,13 +241,13 @@ async function submitForm() {
       // Trigger validation
       await v$.value.$validate()
 
-      if (this.v$.$error) {
+      if (v$.value.$error) {
         // Form is invalid, do not proceed
         return
       }
 // this.$router -> router
       try {
-        const response = await createClient(this.client);
+        const response = await createClient(client);
         router.push('/findclient')
         toast.success(response)
       } catch (error) {

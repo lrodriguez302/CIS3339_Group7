@@ -66,7 +66,7 @@
 </template>
 
 
-// Options API to Composition API using script
+<!--Options API to Composition API using script -->
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
@@ -105,10 +105,10 @@ const eventDate = ref(null)
 
 
 // F3: Creating columns for the DataTable
-const columms = [
-  { labels: 'Event Name', field: 'name' },
-  { labels: 'Event Date', field: 'date', render: (event) => formatDate(event.date) },
-  { labels: 'Event Address', field: 'address.line1' }
+const columns = [
+  { label: 'Event Name', field: 'name' },
+  { label: 'Event Date', field: 'date', render: (event) => formatDate(event.date) },
+  { label: 'Event Address', field: 'address.line1' }
 ]
 
 // Opens the detailed page for clicked events
@@ -151,14 +151,14 @@ function openEvent(event) {
             const response = await searchEvents(query);
             events.value = response;
           } catch (error) {
-            error.value('Error searching events', error)
+            toast.error('Error searching events', error)
           }
         }
         // if user searches by event date
       } else if (searchBy.value === 'Event Date') {
         if (eventDate.value) {
           try {
-            const eventDate = new Date(eventDate.value);
+            const selectedDate = new Date(eventDate.value);
             const formattedDate = eventDate.toISOString().substring(0, 10);
             const query = {
               searchBy: 'date',
