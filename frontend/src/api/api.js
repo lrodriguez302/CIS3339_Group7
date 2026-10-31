@@ -10,6 +10,18 @@ const apiClient = axios.create({
   },
 });
 
+apiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem("authToken");
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  } else {
+    delete config.headers.Authorization;
+  }
+
+  return config;
+});
+
 // Centralized Axios response interceptor for API error handling
 apiClient.interceptors.response.use(
   (response) => response,
@@ -56,39 +68,16 @@ function removeAuthHeader() {
   delete apiClient.defaults.headers.common["Authorization"];
 }
 
-// parsing out error messages from API calls see https://stackoverflow.com/questions/67089014/how-to-read-error-messages-from-javascript-error-object
-function getErrorMessageFromResponseBody(string) {
-  let errorString = string;
-
-  try {
-    let json = JSON.parse(string);
-    if (json.errors) {
-      errorString = json.errors[0].msg;
-    }
-  } catch (parseOrAccessError) {}
-
-  return errorString;
-}
-
 // API call to log the user in
 export async function loginUser(username, password) {
-  try {
-    const response = await apiClient.post("/users/login", {
-      username,
-      password,
-    });
-    const token = response.data.token;
-    localStorage.setItem("authToken", token);
-    setAuthHeader(token);
-    return token;
-  } catch (error) {
-    if (error.response.status === 400) {
-      let errorString = getErrorMessageFromResponseBody(
-        error.response.data.message
-      );
-      throw new Error(errorString); // API errors get thrown here
-    } else throw error;
-  }
+  const response = await apiClient.post("/users/login", {
+    username,
+    password,
+  });
+  const token = response.data.token;
+  localStorage.setItem("authToken", token);
+  setAuthHeader(token);
+  return token;
 }
 
 // API call to log the user out
