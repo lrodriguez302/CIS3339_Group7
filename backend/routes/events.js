@@ -231,7 +231,7 @@ router.put(
       }
 
       if (event.attendees.some((id) => id.equals(client._id))) {
-        return res.status(200).json({ message: 'Already registered' });
+        return res.status(400).send('Client already added to event');
       }
 
       const updated = await events.findOneAndUpdate(
@@ -247,7 +247,7 @@ router.put(
       );
 
       if (!updated) {
-        return res.status(200).json({ message: 'Already registered' });
+        return res.status(400).send('Client already added to event');
       }
 
       res.status(200).send('Client added to event');
@@ -280,10 +280,6 @@ router.put(
         return res.status(404).send('Event not found');
       }
 
-      const isRegistered = event.attendees.some((id) =>
-        id.equals(client._id)
-      );
-
       await events.findOneAndUpdate(withOrg({ _id: event._id }, req), {
         $pull: { attendees: client._id }
       });
@@ -292,10 +288,6 @@ router.put(
         withOrg({ _id: client._id }, req, 'orgs'),
         { $pull: { events: event._id } }
       );
-
-      if (!isRegistered) {
-        return res.status(200).json({ message: 'Not registered' });
-      }
 
       res.status(200).send('Client deregistered with event');
     } catch (error) {
