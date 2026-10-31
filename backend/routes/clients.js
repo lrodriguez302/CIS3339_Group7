@@ -5,13 +5,12 @@ const express = require('express');
 const router = express.Router();
 const { Types } = require('mongoose');
 // Middleware for authorization. For API calls that require authorization, this middleware checks if the header of API calls have a valid security token. If no security token or invalid security token, then the API call is not made.
-const authMiddleWare = require('../auth/authMiddleWare');
-const { requireRole } = require('../auth/authMiddleWare');
+const { requireAuth, requireRole } = require('../auth/authMiddleWare');
 const withOrg = require('../utils/withOrg');
 // importing data model schemas
 const { clients, events } = require('../models/models');
 // API Endpoint to Get all clients
-router.get('/', authMiddleWare, async (req, res, next) => {
+router.get('/', requireAuth, async (req, res, next) => {
   try {
     const cli = await clients.find(withOrg({}, req, 'orgs'));
     res.json(cli);
@@ -20,7 +19,7 @@ router.get('/', authMiddleWare, async (req, res, next) => {
   }
 });
 
-router.get('/id/:id', authMiddleWare, async (req, res, next) => {
+router.get('/id/:id', requireAuth, async (req, res, next) => {
   try {
     const data = await clients.findOne(
       withOrg({ _id: req.params.id }, req, 'orgs')
@@ -38,7 +37,7 @@ router.get('/id/:id', authMiddleWare, async (req, res, next) => {
 
 // API endpoint to GET entries based on search query
 // Ex: '...?firstName=Bob&lastName=&searchBy=name'
-router.get('/search', authMiddleWare, async (req, res, next) => {
+router.get('/search', requireAuth, async (req, res, next) => {
   let queryArray = [];
   let regexOptions = 'i';
 
@@ -88,7 +87,7 @@ router.get('/search', authMiddleWare, async (req, res, next) => {
 // POST create new client
 router.post(
   '/',
-  authMiddleWare,
+  requireAuth,
   requireRole('editor'),
   async (req, res, next) => {
     try {
@@ -110,7 +109,7 @@ router.post(
 
 router.put(
   '/update/:id',
-  authMiddleWare,
+  requireAuth,
   requireRole('editor'),
   async (req, res, next) => {
     try {
@@ -153,7 +152,7 @@ router.put(
 // API endpoint to hard delete client by ID
 router.delete(
   '/:id',
-  authMiddleWare,
+  requireAuth,
   requireRole('editor'),
   async (req, res, next) => {
     try {
@@ -191,13 +190,13 @@ router.delete(
 );
 
 // GET clients by zip code for dashboard
-router.get('/byzip', authMiddleWare, async (req, res, next) => {
+router.get('/byzip', requireAuth, async (req, res, next) => {
   try {
     const data = await clients.aggregate([
       {
         $match: withOrg(
           { 'address.zip': { $exists: true, $ne: '' } },
-          { user: { orgId: new Types.ObjectId(req.user.orgId) } },
+          req,
           'orgs'
         )
       },

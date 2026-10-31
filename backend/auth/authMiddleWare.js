@@ -1,4 +1,6 @@
 const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
+
 // Verify that the request contains a valid JWT
 function requireAuth(req, res, next) {
   const authorization = req.header('Authorization');
@@ -15,7 +17,11 @@ function requireAuth(req, res, next) {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    if (!decoded.orgId || !decoded.role) {
+    if (
+      !decoded.orgId ||
+      !decoded.role ||
+      !mongoose.Types.ObjectId.isValid(decoded.orgId)
+    ) {
       return res.status(401).json({
         message: 'Invalid token'
       });
@@ -32,7 +38,7 @@ function requireAuth(req, res, next) {
 
 // Check whether the authenticated user has the required role
 function requireRole(role) {
-  return function (req, res, next) {
+  return function requireRoleGuard(req, res, next) {
     if (!req.user) {
       return res.status(401).json({
         message: 'Authentication required'
