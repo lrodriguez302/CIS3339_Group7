@@ -231,7 +231,7 @@ router.put(
       }
 
       if (event.attendees.some((id) => id.equals(client._id))) {
-        return res.status(400).json({ message: 'Already registered' });
+        return res.status(200).json({ message: 'Already registered' });
       }
 
       const updated = await events.findOneAndUpdate(
@@ -247,7 +247,7 @@ router.put(
       );
 
       if (!updated) {
-        return res.status(400).json({ message: 'Already registered' });
+        return res.status(200).json({ message: 'Already registered' });
       }
 
       res.status(200).send('Client added to event');
@@ -294,7 +294,7 @@ router.put(
       );
 
       if (!isRegistered) {
-        return res.status(400).json({ message: 'Not registered' });
+        return res.status(200).json({ message: 'Not registered' });
       }
 
       res.status(200).send('Client deregistered with event');
