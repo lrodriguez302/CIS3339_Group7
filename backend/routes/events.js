@@ -230,8 +230,11 @@ router.put(
         return res.status(404).send('Event not found');
       }
 
+      // B1: do not create a duplicate registration
       if (event.attendees.some((id) => id.equals(client._id))) {
-        return res.status(400).send('Client already added to event');
+        return res.status(200).json({
+          message: 'Already registered'
+        });
       }
 
       const updated = await events.findOneAndUpdate(
@@ -246,11 +249,15 @@ router.put(
         { new: true }
       );
 
+      // Handles a duplicate attempt if another request registered
+      // the client before this update completed
       if (!updated) {
-        return res.status(400).send('Client already added to event');
+        return res.status(200).json({
+          message: 'Already registered'
+        });
       }
 
-      res.status(200).send('Client added to event');
+      res.status(200).json(updated);
     } catch (error) {
       next(error);
     }
@@ -280,16 +287,24 @@ router.put(
         return res.status(404).send('Event not found');
       }
 
-      await events.findOneAndUpdate(withOrg({ _id: event._id }, req), {
-        $pull: { attendees: client._id }
-      });
-
-      await clients.findOneAndUpdate(
-        withOrg({ _id: client._id }, req, 'orgs'),
-        { $pull: { events: event._id } }
+      // B1: if the client is not registered, return 200 instead of an error
+      const isRegistered = event.attendees.some((id) =>
+        id.equals(client._id)
       );
 
-      res.status(200).send('Client deregistered with event');
+      if (!isRegistered) {
+        return res.status(200).json({
+          message: 'Not registered'
+        });
+      }
+
+      const updated = await events.findOneAndUpdate(
+        withOrg({ _id: event._id }, req),
+        { $pull: { attendees: client._id } },
+        { new: true }
+      );
+
+      res.status(200).json(updated);
     } catch (error) {
       next(error);
     }
