@@ -5,7 +5,6 @@ const router = express.Router();
 const bcrypt = require('bcrypt');
 // import JWT (JSON Web Token) to create a web token to the user after a successful login - allows user to make API calls
 const jwt = require('jsonwebtoken');
-const mongoose = require('mongoose');
 
 // import users data model schema
 const { users } = require('../models/models');
@@ -14,22 +13,12 @@ const org = process.env.ORG_ID;
 
 // API endpoint to handle login
 router.post('/login', async (req, res) => {
-  const { username, password } = req.body;
+  const { username, password, orgId } = req.body;
 
   try {
-    if (
-      typeof username !== 'string' ||
-      typeof password !== 'string' ||
-      !mongoose.Types.ObjectId.isValid(org)
-    ) {
-      return res.status(400).json({
-        message: 'Invalid username or password'
-      });
-    }
-
     const user = await users.findOne({
       username: username,
-      org: new mongoose.Types.ObjectId(org)
+      org: orgId || org
     });
     if (!user) {
       return res.status(400).json({

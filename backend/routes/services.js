@@ -1,13 +1,14 @@
 const express = require('express');
 const router = express.Router();
 
-const { requireAuth, requireRole } = require('../auth/authMiddleWare');
+const authMiddleWare = require('../auth/authMiddleWare');
+const { requireRole } = require('../auth/authMiddleWare');
 const withOrg = require('../utils/withOrg');
 
 const { services, events } = require('../models/models');
 
 // GET all services for the authenticated organization
-router.get('/', requireAuth, async (req, res, next) => {
+router.get('/', authMiddleWare, async (req, res, next) => {
   try {
     const data = await services.find(withOrg({}, req)).sort({ updatedAt: -1 });
 
@@ -18,7 +19,7 @@ router.get('/', requireAuth, async (req, res, next) => {
 });
 
 // GET a single service by ID
-router.get('/id/:id', requireAuth, async (req, res, next) => {
+router.get('/id/:id', authMiddleWare, async (req, res, next) => {
   try {
     const data = await services.findOne(withOrg({ _id: req.params.id }, req));
 
@@ -33,7 +34,7 @@ router.get('/id/:id', requireAuth, async (req, res, next) => {
 });
 
 // GET services matching a search query
-router.get('/search', requireAuth, async (req, res, next) => {
+router.get('/search', authMiddleWare, async (req, res, next) => {
   try {
     const dbQuery = {};
 
@@ -67,7 +68,7 @@ router.get('/search', requireAuth, async (req, res, next) => {
 // POST create a new service - editor only
 router.post(
   '/',
-  requireAuth,
+  authMiddleWare,
   requireRole('editor'),
   async (req, res, next) => {
     try {
@@ -88,7 +89,7 @@ router.post(
 // PUT update a service - editor only
 router.put(
   '/update/:id',
-  requireAuth,
+  authMiddleWare,
   requireRole('editor'),
   async (req, res, next) => {
     try {
@@ -131,7 +132,7 @@ router.put(
 // DELETE a service - editor only
 router.delete(
   '/:id',
-  requireAuth,
+  authMiddleWare,
   requireRole('editor'),
   async (req, res, next) => {
     try {

@@ -1,14 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const { Types } = require('mongoose');
 
-const { requireAuth, requireRole } = require('../auth/authMiddleWare');
+const authMiddleWare = require('../auth/authMiddleWare');
+const { requireRole } = require('../auth/authMiddleWare');
 const withOrg = require('../utils/withOrg');
 
-const { events, clients, services } = require('../models/models');
+const { events, clients } = require('../models/models');
 
 // GET all events for the authenticated organization
-router.get('/', requireAuth, async (req, res, next) => {
+router.get('/', authMiddleWare, async (req, res, next) => {
   try {
     const data = await events.find(withOrg({}, req)).sort({ date: -1 });
 
@@ -19,7 +19,7 @@ router.get('/', requireAuth, async (req, res, next) => {
 });
 
 // GET a single event
-router.get('/id/:id', requireAuth, async (req, res, next) => {
+router.get('/id/:id', authMiddleWare, async (req, res, next) => {
   try {
     const data = await events.findOne(withOrg({ _id: req.params.id }, req));
 
@@ -34,7 +34,7 @@ router.get('/id/:id', requireAuth, async (req, res, next) => {
 });
 
 // GET events matching a search query
-router.get('/search/', requireAuth, async (req, res, next) => {
+router.get('/search/', authMiddleWare, async (req, res, next) => {
   try {
     const dbQuery = {};
 
@@ -62,7 +62,7 @@ router.get('/search/', requireAuth, async (req, res, next) => {
 });
 
 // GET events a client is registered for
-router.get('/client/:id', requireAuth, async (req, res, next) => {
+router.get('/client/:id', authMiddleWare, async (req, res, next) => {
   try {
     const client = await clients.findOne(
       withOrg({ _id: req.params.id }, req, 'orgs')
@@ -83,7 +83,7 @@ router.get('/client/:id', requireAuth, async (req, res, next) => {
 // GET events a client is not registered for
 router.get(
   '/client/:id/not-registered',
-  requireAuth,
+  authMiddleWare,
   async (req, res, next) => {
     try {
       const client = await clients.findOne(
@@ -106,7 +106,7 @@ router.get(
 );
 
 // GET attendee details for an event
-router.get('/attendees/:id', requireAuth, async (req, res, next) => {
+router.get('/attendees/:id', authMiddleWare, async (req, res, next) => {
   try {
     const event = await events.findOne(withOrg({ _id: req.params.id }, req));
 
@@ -125,20 +125,8 @@ router.get('/attendees/:id', requireAuth, async (req, res, next) => {
 });
 
 // GET events associated with a service
-router.get('/service/:id', requireAuth, async (req, res, next) => {
+router.get('/service/:id', authMiddleWare, async (req, res, next) => {
   try {
-    if (!Types.ObjectId.isValid(req.params.id)) {
-      return res.status(404).send('Service not found');
-    }
-
-    const service = await services.findOne(
-      withOrg({ _id: req.params.id }, req)
-    );
-
-    if (!service) {
-      return res.status(404).send('Service not found');
-    }
-
     const data = await events
       .find(withOrg({ services: { $in: [req.params.id] } }, req))
       .select({
@@ -158,7 +146,7 @@ router.get('/service/:id', requireAuth, async (req, res, next) => {
 // POST create an event - editor only
 router.post(
   '/',
-  requireAuth,
+  authMiddleWare,
   requireRole('editor'),
   async (req, res, next) => {
     try {
@@ -179,7 +167,7 @@ router.post(
 // PUT update an event - editor only
 router.put(
   '/update/:id',
-  requireAuth,
+  authMiddleWare,
   requireRole('editor'),
   async (req, res, next) => {
     try {
@@ -222,17 +210,10 @@ router.put(
 // PUT register a client for an event - editor only
 router.put(
   '/register',
-  requireAuth,
+  authMiddleWare,
   requireRole('editor'),
   async (req, res, next) => {
     try {
-      if (
-        !Types.ObjectId.isValid(req.query.client) ||
-        !Types.ObjectId.isValid(req.query.event)
-      ) {
-        return res.status(404).send('Client or event not found');
-      }
-
       const client = await clients.findOne(
         withOrg({ _id: req.query.client }, req, 'orgs')
       );
@@ -249,13 +230,8 @@ router.put(
         return res.status(404).send('Event not found');
       }
 
-      if (
-        Array.isArray(event.attendees) &&
-        event.attendees.some(
-          (id) => id.toString() === client._id.toString()
-        )
-      ) {
-        return res.status(200).json({ message: 'Already registered' });
+      if (event.attendees.some((id) => id.equals(client._id))) {
+        return res.status(400).send('Client already added to event');
       }
 
       const updated = await events.findOneAndUpdate(
@@ -271,10 +247,10 @@ router.put(
       );
 
       if (!updated) {
-        return res.status(200).json({ message: 'Already registered' });
+        return res.status(400).send('Client already added to event');
       }
 
-      res.status(200).json({ message: 'Client registered' });
+      res.status(200).send('Client added to event');
     } catch (error) {
       next(error);
     }
@@ -284,17 +260,10 @@ router.put(
 // PUT deregister a client from an event - editor only
 router.put(
   '/deregister',
-  requireAuth,
+  authMiddleWare,
   requireRole('editor'),
   async (req, res, next) => {
     try {
-      if (
-        !Types.ObjectId.isValid(req.query.client) ||
-        !Types.ObjectId.isValid(req.query.event)
-      ) {
-        return res.status(404).send('Client or event not found');
-      }
-
       const client = await clients.findOne(
         withOrg({ _id: req.query.client }, req, 'orgs')
       );
@@ -311,13 +280,6 @@ router.put(
         return res.status(404).send('Event not found');
       }
 
-      const isRegistered = Array.isArray(event.attendees) && event.attendees.some(
-        (id) => id.toString() === client._id.toString()
-      );
-      if (!isRegistered) {
-        return res.status(200).json({ message: 'Not registered' });
-      }
-
       await events.findOneAndUpdate(withOrg({ _id: event._id }, req), {
         $pull: { attendees: client._id }
       });
@@ -327,7 +289,7 @@ router.put(
         { $pull: { events: event._id } }
       );
 
-      res.status(200).json({ message: 'Client deregistered' });
+      res.status(200).send('Client deregistered with event');
     } catch (error) {
       next(error);
     }
@@ -337,7 +299,7 @@ router.put(
 // DELETE event - editor only
 router.delete(
   '/:id',
-  requireAuth,
+  authMiddleWare,
   requireRole('editor'),
   async (req, res, next) => {
     try {
@@ -369,7 +331,7 @@ router.delete(
 );
 
 // GET event attendance for the past two months
-router.get('/attendance', requireAuth, async (req, res, next) => {
+router.get('/attendance', authMiddleWare, async (req, res, next) => {
   try {
     const twoMonthsAgo = new Date();
     twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
